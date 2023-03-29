@@ -1,7 +1,9 @@
 import "./styles.css";
 import { game } from "./battleship.js";
 import { domainToUnicode } from "url";
-
+let handler = function(e) {
+    showCurrentShip(e);
+}
 let board = document.querySelector(".board");
 function createBoard() {
     for (let i = 0; i < 10; i++) {
@@ -10,44 +12,62 @@ function createBoard() {
         for (let j = 0; j < 10; j++) {
             let col = document.createElement("div");
             col.classList.add("col");
-            col.addEventListener("mouseenter", (e) => {
-                showCurrentShip(e);
-            });
+            col.pos = [i, j];
+            
+            col.addEventListener("mouseenter", handler);
             row.appendChild(col);
         }
         board.appendChild(row);
     }
 }
 createBoard();
-console.log(game);
-let col = document.querySelector(".col");
-let currentObj = 0;
+let currentObj = {
+    length: 5,
+};
+let total = [];
 
 function showCurrentShip(e) {
-    if (currentObj === 0) {
-        let current = document.elementFromPoint(e.clientX, e.clientY);
-        let total = [];
-        for (let i = 0; i < 5; i++) {
-            let wow = document.elementFromPoint(e.clientX, e.clientY + (i * 50));
-            if (!wow.isEqualNode(col)) {
-                wow = null;
-            }
-            total.push(wow);
-            if (wow === null) {
-                continue;
-            } else {
-                wow.classList.add("red");
-            }
-            
-        }
-        console.log(total);
-        current.classList.add("red");
-        current.addEventListener("mouseleave", (e) => {
-            current.classList.remove("red");
-            for(let i = 0; i < 5; i++) {
-                let wows = total[i];
-                wows.classList.remove("red");
-            }
-        })
+    if (currentObj.length === 5) {
+        total = [];
+        showShip(e, currentObj.length);
+        placeShip(e);
     }
+    if (currentObj.length === 4) {
+        total = [];
+        showShip(e, currentObj.length);
+        placeShip(e);
+    }
+}
+
+
+function showShip(e, length) {
+    
+    for (let i = 0; i < length; i++) {
+        
+        let current = document.elementFromPoint(e.clientX, e.clientY + (i * 50));
+        if (current.hasOwnProperty("pos")) {
+            total.push(current);
+            current.classList.add("red");
+        }
+        current.addEventListener("mouseleave", hideShip);
+    }
+}
+
+let hideShip = () => {
+    for(let i = 0; i < total.length; i++) {
+        let wows = total[i];
+        wows.classList.remove("red");
+    }
+}
+
+
+function placeShip(e) {
+    let box = e.target;
+    box.addEventListener("click", () => {
+        for (let i = 0; i < total.length; i++) {
+            let current = total[i];
+            current.removeEventListener("mouseleave", hideShip);
+            currentObj.length--;
+        }
+    })
 }
